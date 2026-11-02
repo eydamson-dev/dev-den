@@ -133,7 +133,7 @@ file, so it does not prove the configuration.
 | obscura-dev | both | AI | `obscura --version` | same binary, same entry, hidden by the `tools` glob | obscura |
 | chatgpt-bridge | both | AI | `~/projects/chatgpt-bridge/.venv/bin/chatgpt-bridge-mcp` exists and runs | clone the project and create its venv (see section 12) | docker, python3 |
 | figma | both | AI | `FIGMA_API_KEY` file present and non-empty | `npx -y figma-developer-mcp --stdio` | Figma token |
-| proxmox | both | AI + CMD | `uvx proxmox-mcp-plus==0.6.2 --help` runs, and the read-only check in section 13 passes | see section 13 | uv, Proxmox token |
+| proxmox | both | AI + CMD | the token check in section 13 returns `200` | see section 13 | uv, Proxmox token |
 | comfy | desktop only | — | — | — | GPU |
 | blender | desktop only | CMD | `blender --version` | install Blender, enable its MCP add-on | GPU recommended |
 | unity | desktop only | — | — | — | GPU, Unity Editor |
@@ -171,20 +171,22 @@ Record the confirmed binary name here once it is known.
 
 ## 13. Proxmox MCP
 
-Reference: `RekklesNA/ProxmoxMCP-Plus` at `https://github.com/RekklesNA/ProxmoxMCP-Plus`,
-pinned to `0.6.2`, launched with `uvx`. Every command in this section has the status
-noted in `docs/proxmox-mcp.md`. Read that before running any of them.
+Reference: `RekklesNA/ProxmoxMCP-Plus` (`https://github.com/RekklesNA/ProxmoxMCP-Plus`), pinned to
+`0.6.2`, run over stdio with `uvx proxmox-mcp-plus==0.6.2`. Configuration keys, their
+sources, and the untested role and token steps are in `docs/proxmox-mcp.md`.
+
+Do not check the MCP by starting it: it is a stdio server and waits for a client.
+Check the token against the Proxmox API instead (see the doc for the command).
 
 | Step | Applies to | Mode | Check | Notes |
 | --- | --- | --- | --- | --- |
-| Proxmox API endpoint | both | AI | HTTPS GET of the version endpoint returns 200 | URL in the private note |
-| Proxmox role | both | CMD | `pveum role list` contains the role name | Privilege list in `docs/proxmox-mcp.md` |
-| Proxmox user + token | both | CMD | `pveum user token list <user>` lists the token | Token secret is shown once. Capture it into the secrets file, do not print it |
-| env file for the MCP | both | AI | `test -s <env file>` and it has no trailing newline in the token | Private path. Mode 600 |
-| MCP connectivity | both | AI | `uvx proxmox-mcp-plus==0.6.2` starts and a read-only tool returns data | Read-only first |
+| Private env file | both | AI | `test -s <PRIVATE_ENV_FILE>` and mode `600` | Holds `PROXMOX_*` variables. Never printed |
+| Token works | both | AI | API version call returns `200` (command in the doc) | Proves the token and host, without starting the MCP |
+| MCP launches | both | AI | `command -v uvx` succeeds | Full launch is tested by OpenCode, not by the skill |
+| Role and token creation | both | CMD | untested, see the doc | Run only after reading each output |
 
-Read-only is the default. Write privileges are added only for a documented
-operation, and I approve each one.
+Read-only is the default. Write privileges are added only for a documented operation
+the user approves.
 
 ## 14. Local AI (desktop only)
 
