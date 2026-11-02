@@ -18,25 +18,18 @@ waits for me to say `done`, re-checks, and continues.
 
 ## Install the skill
 
-The repository is **private**. Authenticate first, once per machine:
-
-```sh
-gh auth login --hostname github.com --git-protocol https --web
-```
-
-Then install the skill:
-
 ```sh
 git clone https://github.com/eydamson-dev/dev-den.git ~/projects/dev-den
 mkdir -p ~/.config/opencode/skills
 ln -sfn ~/projects/dev-den/skills/dev-den-setup ~/.config/opencode/skills/dev-den-setup
 ```
 
+The repository is public, so the clone needs no credentials. If it is ever made
+private again, authenticate first with
+`gh auth login --hostname github.com --git-protocol https --web`.
+
 An SSH clone works too if the machine has a key registered with GitHub:
 `git clone git@github.com:eydamson-dev/dev-den.git ~/projects/dev-den`.
-
-`gh auth login` also stores a credential helper, so a later `git pull` works
-without asking again.
 
 A symlink means that `git pull` in `~/projects/dev-den` updates the skill
 everywhere it is linked. Restart OpenCode after installing it, so the skill is
@@ -95,6 +88,16 @@ and tells you where to record it.
 
 See [`docs/testing.md`](docs/testing.md) for step-by-step testing, including what
 to expect at each stage.
+
+## Public repository
+
+This repository is public. It holds procedures and placeholders only. Real
+hostnames, IP addresses, application IDs, domain names, tokens, and key paths
+never go in it. The Proxmox env file, secret files, and machine notes stay on
+each machine.
+
+A commit that publishes such a value stays published in the git history even
+after it is removed, so check before committing.
 
 ## Status
 
