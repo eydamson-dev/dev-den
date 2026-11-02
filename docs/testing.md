@@ -6,6 +6,14 @@ The first two phases are **read-only**. They change nothing on the machine.
 
 ## Phase 0: Install the skill (the only change)
 
+The repository is private, so authenticate first:
+
+```sh
+gh auth login --hostname github.com --git-protocol https --web
+```
+
+Then install the skill:
+
 ```sh
 git clone https://github.com/eydamson-dev/dev-den.git ~/projects/dev-den
 mkdir -p ~/.config/opencode/skills

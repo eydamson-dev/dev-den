@@ -18,11 +18,25 @@ waits for me to say `done`, re-checks, and continues.
 
 ## Install the skill
 
+The repository is **private**. Authenticate first, once per machine:
+
+```sh
+gh auth login --hostname github.com --git-protocol https --web
+```
+
+Then install the skill:
+
 ```sh
 git clone https://github.com/eydamson-dev/dev-den.git ~/projects/dev-den
 mkdir -p ~/.config/opencode/skills
 ln -sfn ~/projects/dev-den/skills/dev-den-setup ~/.config/opencode/skills/dev-den-setup
 ```
+
+An SSH clone works too if the machine has a key registered with GitHub:
+`git clone git@github.com:eydamson-dev/dev-den.git ~/projects/dev-den`.
+
+`gh auth login` also stores a credential helper, so a later `git pull` works
+without asking again.
 
 A symlink means that `git pull` in `~/projects/dev-den` updates the skill
 everywhere it is linked. Restart OpenCode after installing it, so the skill is
