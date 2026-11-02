@@ -81,7 +81,7 @@ private machine note, never from this file.
 | tmux | both | AI | `tmux -V` | `sudo dnf install -y tmux` | — |
 | stylua | both | AI | `stylua --version` | `cargo install stylua` or the upstream release | Neovim formatter |
 | pre-commit | both | AI | `pre-commit --version` | `uv tool install pre-commit` | — |
-| Coolify CLI | both | CMD | `coolify --version` | Install from the Coolify CLI release page, put it in `/usr/local/bin` | Desktop 1.8.0. Context points at the homelab, in the private note |
+| Coolify CLI | both | CMD | `coolify version` | Install from the Coolify CLI release page, put it in `/usr/local/bin` | Desktop 1.8.0. Context points at the homelab, in the private note |
 | Cloudflare `cf` CLI (beta) | both | AI | `cf --version` | `npm install -g cf` | Beta. Install only. Do not log in as part of setup |
 | codex CLI | desktop | CMD | `codex --version` | Install from its release page | Optional |
 
