@@ -36,7 +36,7 @@ private machine note, never from this file.
 | secrets directory | both | AI | `stat -c '%a' ~/.config/secrets` prints `700` | `mkdir -p ~/.config/secrets && chmod 700 ~/.config/secrets` | Never print values |
 | Figma token | both | CMD | `test -s ~/.config/secrets/figma-token` | `printf '%s' 'TOKEN' > ~/.config/secrets/figma-token && chmod 600 ~/.config/secrets/figma-token` | Raw file, no trailing newline |
 | Obsidian REST token | both | GUI | `test -s ~/.config/secrets/obsidian-token` | Copy from the plugin settings, then `printf '%s' 'KEY' > …` | Generated per install. Never copy from another machine |
-| Proxmox token | both | CMD | `test -s ~/.config/secrets/proxmox-token` | See section 9 | Raw file, no trailing newline |
+| Proxmox token | both | CMD | `test -s ~/.config/secrets/proxmox-token` and mode `600` | See section 13 | `TOKEN_NAME` + `SECRET` lines, not a raw value. The MCP env maps them to `PROXMOX_TOKEN_NAME`/`PROXMOX_TOKEN_VALUE` |
 | homelab SSH key | both | CMD | `test -f ~/.ssh/<homelab-key>` | `ssh-keygen -t ed25519 -f ~/.ssh/<homelab-key> -C "<machine-name>"` | One key per machine. Add the public key to the homelab yourself |
 
 Each secret is a separate raw file. There is no shared `~/.config/secrets/env`
@@ -112,23 +112,28 @@ not install them without a yes.
 
 | Item | Applies to | Mode | Check | Install | Reference |
 | --- | --- | --- | --- | --- | --- |
-| OpenCode CLI | both | AI | `opencode --version` | `curl -fsSL https://opencode.ai/install \| bash` | 2.0.29 |
-| global config | both | AI | `jq empty ~/.config/opencode/opencode.json` | merge, do not overwrite (see SKILL.md) | — |
-| global AGENTS.md | both | AI | `test -s ~/.config/opencode/AGENTS.md` | copy from the dotfiles repository | — |
-| `tools` glob for LAN browser | desktop + laptop | AI | `jq -e '.tools["obscura-dev_*"] == false' ~/.config/opencode/opencode.json` | merge the key | Hides the LAN-capable browser's tools. Entry-level `disabled` and `enabled` keys do not work on 2.0.29 |
-| skills | both | AI | `test -f ~/.config/opencode/skills/<name>/SKILL.md` for each skill | copy or symlink from the repository | This skill included |
+| OpenCode CLI | both | AI | `opencode --version` | `curl -fsSL https://opencode.ai/install \| bash` | 2.2.5 (verified); 2.0.29 was the earlier reference |
+| global config | both | AI | `jq empty ~/.config/opencode/opencode.json`, then `./setup.sh verify --only opencode` reports no drift | Render from `~/projects/dotfiles`: `./setup.sh configure --only opencode`; machine choices live in `~/.config/dev-den/machine.json`. Never hand-merge | New servers are gated by `config/features.json` + the profile |
+| global AGENTS.md | both | AI | `test -s ~/.config/opencode/AGENTS.md` | `./setup.sh configure --only opencode` from `~/projects/dotfiles` | Machine-specific text lives in `~/.config/dev-den/local/AGENTS.md` |
+| `tools` glob for LAN browser | desktop + laptop | AI | `jq -e '.tools["obscura-dev_*"] == false' ~/.config/opencode/opencode.json` | Rendered from `packages/opencode/opencode.base.json`; edit there, not in the live file | Hides the LAN-capable browser's tools. Version-specific: `disabled`/`enabled` did not work on 2.0.29; re-test `tools` vs `permissions` on upgrade |
+| skills | both | AI | `test -f ~/.config/opencode/skills/<name>/SKILL.md` for each skill | `./setup.sh configure --only opencode` installs managed skills; symlink `dev-den-setup` separately | This skill included |
 | notifier plugin | both | CMD | `jq -e '.plugins[] \| select(startswith("@mohak34/opencode-notifier"))' ~/.config/opencode/opencode.json` | add to plugins | Optional |
 | desktop pet plugin | desktop only | — | — | — | Do not install on the laptop |
 
+The installer adds `~/.opencode/bin` to `.bashrc` only. On a zsh login shell, add
+it to `~/.zshenv`; otherwise `opencode` disappears after switching shells.
+
 ## 10. MCP servers
 
-Each server is listed in `opencode.json` under `mcp.servers`. Check the entry, then
-test the server itself. `opencode mcp list` reports the running service, not the
-file, so it does not prove the configuration.
+MCP servers are rendered into `opencode.json` under `mcp.servers` from
+`~/projects/dotfiles/packages/opencode/opencode.base.json` plus
+`~/.config/dev-den/machine.json`. Check the entry, then test the server itself.
+`opencode mcp list` reports the running service, not the file, so it does not
+prove the configuration.
 
 | Server | Applies to | Mode | Check | Install | Needs |
 | --- | --- | --- | --- | --- | --- |
-| obsidian | both | GUI + AI | authenticated `curl` to the local REST API (see section 11) | AI writes the entry, you enter the token | Obsidian running, plugin enabled, token file |
+| obsidian | both | GUI + AI | authenticated `GET /vault/` (section 11); the remote MCP is `https://127.0.0.1:27124/mcp/` | Rendered from dotfiles; enter the token | Obsidian running, plugin enabled, token file, plugin cert trusted |
 | chrome-devtools | both | CMD | `curl -fsS http://127.0.0.1:9222/json/version` | launch the browser with a debugging port (see below) | Brave |
 | obscura | both | AI | `obscura --version` | pinned binary from the release page, verify its SHA-256 | — |
 | obscura-dev | both | AI | `obscura --version` | same binary, same entry, hidden by the `tools` glob | obscura |
@@ -153,13 +158,13 @@ Record the confirmed binary name here once it is known.
 
 | Item | Applies to | Mode | Check | Install | Notes |
 | --- | --- | --- | --- | --- | --- |
-| Obsidian | both | AI + GUI | `flatpak info md.obsidian.Obsidian` | `flatpak install -y flathub md.obsidian.Obsidian` | Flatpak. Launch it once |
+| Obsidian | both | AI + GUI | `flatpak info md.obsidian.Obsidian`, or `test -x ~/AppImages/obsidian.appimage` and confirm the process/API | Flatpak, or the AppImage from <https://obsidian.md> | This laptop uses `~/AppImages/obsidian.appimage`, not Flatpak. Launch it once |
 | vault folder | both | AI | `test -d ~/Documents/Obsidian/Engineering` | Fast Note Sync syncs it from the homelab server | Sync must finish first. Do not touch the vault before then |
 | vault sync | both | GUI | Fast Note Sync shows this device as paired and idle | pair with the homelab server (URL in the private note) | Pairing is per device |
 | `obsidian-local-rest-api` | both | GUI | `grep -q '"obsidian-local-rest-api"' ~/Documents/Obsidian/Engineering/.obsidian/community-plugins.json` | enable in Settings → Community plugins | — |
 | `fast-note-sync` | both | GUI | same pattern | enable and pair | — |
 | `run-in-background` | both | GUI | same pattern | enable; Obsidian starts at login | Keeps the REST endpoint available |
-| REST API reachable | both | AI | `curl -fsSk -H "Authorization: Bearer $(cat ~/.config/secrets/obsidian-token)" https://127.0.0.1:27124/` returns 200 | — | Certificate is self-signed, so `-k` is expected |
+| REST API reachable | both | AI | authenticated `GET /vault/` returns `200`; the same call without the token returns `401` | — | `/` returns `200` unauthenticated, so it is not a check. Use a mode-600 header file, not argv. Trust the plugin cert with `--cacert` or `NODE_EXTRA_CA_CERTS` |
 
 ## 12. chatgpt-bridge
 
@@ -167,8 +172,8 @@ Record the confirmed binary name here once it is known.
 | --- | --- | --- | --- | --- | --- |
 | project clone | both | AI | `test -d ~/projects/chatgpt-bridge/.git` | `git clone <chatgpt-bridge repository> ~/projects/chatgpt-bridge` | Private repository: needs `gh auth` first |
 | venv + entry point | both | AI | `test -x ~/projects/chatgpt-bridge/.venv/bin/chatgpt-bridge-mcp` | `python3 -m venv .venv` then `.venv/bin/pip install -e .` | — |
-| browser container | both | CMD | `docker ps --format '{{.Names}}' \| grep -qx chatgpt-bridge-browser` | `chatgpt-bridge browser start` | — |
-| browser login | both | GUI | `chatgpt-bridge doctor` passes | open the browser UI, sign in to ChatGPT once | Per machine |
+| browser backend | both | CMD | `chatgpt-bridge doctor` reports the browser reachable | Use the existing Brave CDP endpoint (`CDP_URL=http://127.0.0.1:9222`), or `chatgpt-bridge browser start` for container mode | This laptop uses Brave CDP, not the Docker container |
+| browser login | both | GUI | `chatgpt-bridge doctor` reports the sidebar/chats readable | Sign in once in whichever browser is used | Per machine |
 
 ## 13. Proxmox MCP
 

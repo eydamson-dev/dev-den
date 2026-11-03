@@ -2,14 +2,33 @@
 
 Dated record of what was chosen and why. Newest first.
 
+## 2026-11-03: dev-den owns checks; dotfiles owns generated config
+
+**Chosen.** `~/projects/dev-den` owns the inventory, the workflow, and the docs.
+`~/projects/dotfiles` remains the mechanism for the files themselves:
+`scripts/render-config.py` renders `~/.config/opencode/opencode.json` from
+`packages/opencode/opencode.base.json` plus `~/.config/dev-den/machine.json`, and
+`setup.sh configure` installs `AGENTS.md`, `cli.json`, the managed skills, and the
+nvim/tmux/zsh packages.
+
+**Why.** OpenCode v2 has no include/merge mechanism for its own config, so a
+renderer is still required. The 2026-11-02 decision rejected the renderer as the
+*owner of the workflow*, not as the way to produce one file. Hand-merging
+`opencode.json` drifts; rendering it and checking with
+`./setup.sh verify --only opencode` does not.
+
+**Rule.** The inventory never tells the AI to hand-merge `opencode.json`. It runs
+the renderer, then checks the result.
+
 ## 2026-11-02: one skill and one inventory, not a framework
 
 **Chosen.** One OpenCode skill (`skills/dev-den-setup`) and one inventory file. The
 AI inspects the machine, reports status, and runs or guides each step.
 
-**Rejected.** A Bash provisioning framework with phases, a template renderer for
-the OpenCode config, and per-package verify scripts. It was complicated to
-maintain, and each new tool meant more code.
+**Rejected.** A Bash provisioning framework with phases, a template renderer as
+the owner of the workflow, and per-package verify scripts. It was complicated to
+maintain, and each new tool meant more code. (The renderer itself was kept in
+dotfiles; see 2026-11-03.)
 
 **Why.** The AI can run and read commands itself. The hard part is knowing what
 each item is and how to check it, which is knowledge, not code. Knowledge fits in
@@ -33,8 +52,8 @@ or a config entry existing, does not count as working.
 
 The repository is written so it can be made public. It holds procedures, check
 commands, and placeholders. Real hostnames, IP addresses, application IDs, domain
-names, tokens, and key paths stay in a private note on each machine and in
-`~/.config/secrets/`.
+names, tokens, and key paths stay in `~/.config/dev-den/` (`machine.json`,
+`local/AGENTS.md`, `local/infra.md`) and in `~/.config/secrets/`.
 
 ## 2026-11-02: Proxmox MCP
 

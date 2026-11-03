@@ -3,9 +3,11 @@
 A single OpenCode skill that knows my development environment, reports what is
 already set up on the current machine, and sets up whatever I choose.
 
-It replaces a larger provisioning framework. The AI does the work it can do
-itself. For anything that needs me, it prints the exact command or instructions,
-waits for me to say `done`, re-checks, and continues.
+It owns the workflow and the checks. The configuration files it installs
+(`opencode.json`, `AGENTS.md`, managed skills, nvim/tmux/zsh) still come from
+`~/projects/dotfiles`, rendered from `~/.config/dev-den/machine.json`. The AI does
+the work it can do itself. For anything that needs me, it prints the exact command
+or instructions, waits for me to say `done`, re-checks, and continues.
 
 ## Contents
 
@@ -14,7 +16,7 @@ waits for me to say `done`, re-checks, and continues.
 | `skills/dev-den-setup/SKILL.md` | The skill: workflow, status rules, pause-and-wait rule, backup rule |
 | `skills/dev-den-setup/inventory.md` | Every item: applicability, check, install, mode, version reference |
 | `docs/decisions.md` | Architecture decisions and why they were made |
-| `docs/proxmox-mcp.md` | Proxmox MCP setup steps (marked untested until verified) |
+| `docs/proxmox-mcp.md` | Proxmox MCP config, token rotation, and safe checks |
 
 ## Install the skill
 
@@ -23,6 +25,11 @@ git clone https://github.com/eydamson-dev/dev-den.git ~/projects/dev-den
 mkdir -p ~/.config/opencode/skills
 ln -sfn ~/projects/dev-den/skills/dev-den-setup ~/.config/opencode/skills/dev-den-setup
 ```
+
+The skill is only the inventory. The configuration files come from
+`~/projects/dotfiles`; run `./setup.sh configure` there to install `opencode.json`,
+`AGENTS.md`, the managed skills, and the nvim/tmux/zsh packages. Use
+`--only opencode` to restrict it to OpenCode.
 
 The repository is public, so the clone needs no credentials. If it is ever made
 private again, authenticate first with
@@ -101,6 +108,6 @@ after it is removed, so check before committing.
 
 ## Status
 
-Draft. The inventory and the skill are being verified step by step against the
-desktop before the laptop run. Items marked `untested` in `docs/proxmox-mcp.md`
-have not been run yet.
+Verified on the laptop on 2026-11-03: every applicable inventory item is installed,
+configured, or working. The Proxmox token, CA, and MCP steps are verified; see
+`docs/proxmox-mcp.md`.
