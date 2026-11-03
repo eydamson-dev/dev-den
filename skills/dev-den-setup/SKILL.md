@@ -58,19 +58,26 @@ Report the strongest status the evidence supports, and no stronger.
 
 ## Secrets
 
-- Values live in `~/.config/secrets/` as raw files with no trailing newline,
-  permissions `600`, directory `700`.
-- Never print a secret value in chat, in a command output, or in a file in this
-  repository. Check that a secret file exists and is non-empty. Do not `cat` it.
+- Values live in `~/.config/secrets/`, permissions `600`, directory `700`. A file
+  is either a single raw value with no trailing newline, or a labelled key file
+  such as `TOKEN_NAME`/`SECRET` or `URL`/`TOKEN`.
+- Never print or read a secret value in chat, in a command output, or in a file in
+  this repository. Check that a secret file exists and has the right mode. If a
+  value must be compared, compare a hash. Do not `cat` it.
+- Never put a secret in argv. Pass a header through a mode-600 file and remove the
+  file after use.
+- After changing a secret or an env file, restart the OpenCode backend. MCP
+  children read their environment when they are spawned.
 - If a secret is missing, tell me the file path and how to create it. Do not ask
   me to paste it into the chat.
 
 ## Machine-specific values
 
 Hostnames, IP addresses, application IDs, container IDs, and similar facts are not
-in this repository. They live in a private note on each machine. Read that note
-when a step needs one. If it is missing, ask me for the value and tell me where to
-record it. Do not invent one.
+in this repository. They live in `~/.config/dev-den/`: `machine.json` for the role
+and feature flags, `local/AGENTS.md` for this machine's instructions, and
+`local/infra.md` for hosts and IDs. Read those when a step needs one. If a value is
+missing, ask me for it and tell me where to record it. Do not invent one.
 
 ## Safety
 

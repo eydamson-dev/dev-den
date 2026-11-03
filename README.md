@@ -80,16 +80,18 @@ the check, not your word.
 
 ### Secrets
 
-The AI never prints a secret value. Secrets live in `~/.config/secrets/` as raw
-files with no trailing newline and mode `600`. The AI checks that a file exists
-and is non-empty. It does not read the contents.
+The AI never prints or reads a secret value. Secrets live in `~/.config/secrets/`
+with mode `600`; a file is either a single raw value with no trailing newline or a
+labelled key file such as `TOKEN_NAME`/`SECRET`. The AI checks that a file exists
+and has the right mode, and compares hashes when a value must be compared.
 
 ### Machine-specific values
 
 Hostnames, IP addresses, application IDs, and similar values are not in this
-repository. Keep them in a private note on each machine. The AI reads that note
-when a step needs a value. If the note is missing, the AI asks you for the value
-and tells you where to record it.
+repository. Keep them in `~/.config/dev-den/` — `machine.json` for role and feature
+flags, `local/AGENTS.md` for machine instructions, and `local/infra.md` for hosts
+and IDs. The AI reads those when a step needs a value. If they are missing, the AI
+asks you for the value and tells you where to record it.
 
 ## Test it on a machine
 

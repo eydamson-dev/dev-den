@@ -83,9 +83,13 @@ file; do not create one.
 | tmux | both | AI | `tmux -V` | `sudo dnf install -y tmux` | — |
 | stylua | both | AI | `stylua --version` | `cargo install stylua` or the upstream release | Neovim formatter |
 | pre-commit | both | AI | `pre-commit --version` | `uv tool install pre-commit` | — |
-| Coolify CLI | both | CMD | `coolify version` | Install from the Coolify CLI release page, put it in `/usr/local/bin` | Desktop 1.8.0. Context points at the homelab, in the private note |
+| Coolify CLI | both | CMD | `coolify version` | Install from the Coolify CLI release page, put it in `/usr/local/bin` | 1.11.0 verified on the laptop; context in the private note |
 | Cloudflare `cf` CLI (beta) | both | AI | `cf --version` | `npm install -g cf` | Beta. Install only. Do not log in as part of setup |
 | codex CLI | desktop | CMD | `codex --version` | Install from its release page | Optional |
+
+Coolify context: `coolify context add <name> <url> <token> --default`, then
+`coolify context verify`. Keep the token in `~/.config/secrets/coolify-token` as
+`URL=`/`TOKEN=`; do not pass it in argv.
 
 ## 7. Shell
 
@@ -123,6 +127,15 @@ not install them without a yes.
 The installer adds `~/.opencode/bin` to `.bashrc` only. On a zsh login shell, add
 it to `~/.zshenv`; otherwise `opencode` disappears after switching shells.
 
+The desktop app does not inherit the shell PATH. If `opencode mcp list` reports
+`NotFound: npx` for `figma` or `chrome-devtools`, launch it through a wrapper that
+adds the fnm and opencode bin directories, and set `NODE_EXTRA_CA_CERTS` for the
+Obsidian plugin certificate. A config reload does not change the service
+environment; fully restart the app.
+
+`img2threejs` is installed per machine and is not shipped by the dotfiles repo; its
+absence in `verify` is a warning, not a failure.
+
 ## 10. MCP servers
 
 MCP servers are rendered into `opencode.json` under `mcp.servers` from
@@ -144,15 +157,18 @@ prove the configuration.
 | blender | desktop only | CMD | `blender --version` | install Blender, enable its MCP add-on | GPU recommended |
 | unity | desktop only | — | — | — | GPU, Unity Editor |
 
-Brave debugging launch (command-doable, for chrome-devtools). The binary name is
-unverified on Fedora; confirm it with `command -v brave-browser` before use:
+Brave debugging launch (for chrome-devtools). `/usr/bin/brave-browser` is the
+confirmed Fedora binary. To make CDP the default, install a wrapper and point the
+user `.desktop` entry at it:
 
 ```sh
-brave-browser --remote-debugging-port=9222 --remote-debugging-address=127.0.0.1
+#!/bin/sh
+exec /usr/bin/brave-browser --remote-debugging-port=9222 --remote-debugging-address=127.0.0.1 "$@"
 ```
 
+Put it at `~/.local/bin/brave-browser`, then override
+`~/.local/share/applications/brave-browser.desktop` to use that absolute path.
 Close any running Brave first, or the flag is ignored. Verify with the check above.
-Record the confirmed binary name here once it is known.
 
 ## 11. Obsidian and engineering memory
 
@@ -165,6 +181,10 @@ Record the confirmed binary name here once it is known.
 | `fast-note-sync` | both | GUI | same pattern | enable and pair | — |
 | `run-in-background` | both | GUI | same pattern | enable; Obsidian starts at login | Keeps the REST endpoint available |
 | REST API reachable | both | AI | authenticated `GET /vault/` returns `200`; the same call without the token returns `401` | — | `/` returns `200` unauthenticated, so it is not a check. Use a mode-600 header file, not argv. Trust the plugin cert with `--cacert` or `NODE_EXTRA_CA_CERTS` |
+
+The remote MCP is HTTPS with the plugin's self-signed certificate. Extract
+`.crypto.cert` from the plugin `data.json` to a file and set `NODE_EXTRA_CA_CERTS`
+in the OpenCode service environment. Do not disable verification.
 
 ## 12. chatgpt-bridge
 
@@ -186,7 +206,7 @@ Check the token against the Proxmox API instead (see the doc for the command).
 
 | Step | Applies to | Mode | Check | Notes |
 | --- | --- | --- | --- | --- |
-| Private env file | both | AI | `test -s <PRIVATE_ENV_FILE>` and mode `600` | Holds `PROXMOX_*` variables. Never printed |
+| Private env file | both | AI | `test -s <PRIVATE_ENV_FILE>` and mode `600` | Holds `PROXMOX_*` and `REQUESTS_CA_BUNDLE`; sources the token file |
 | Token works | both | AI | API version call returns `200` (command in the doc) | Proves the token and host, without starting the MCP |
 | MCP launches | both | AI | `command -v uvx` succeeds | Full launch is tested by OpenCode, not by the skill |
 | Role and token creation | both | CMD | verified on the homelab, see the doc | Run only after reading each output |
@@ -197,6 +217,14 @@ the user approves.
 The MCP child reads its environment when it is spawned. After rotating the token,
 restart the OpenCode backend and re-run `opencode mcp list`; a config reload alone
 keeps the old secret in the child.
+
+Access model: the API token handles the control plane; guest work uses
+per-container SSH as root with `~/.ssh/id_homelab` (one key per machine), installed
+into every guest from the host with `pct exec`. The host shell is break-glass only.
+The MCP's `cwd` is the private config directory, so its `proxmox-jobs.sqlite3` stays
+out of repositories. If the homelab repo is present,
+`scripts/check-permissions.sh` checks the token's effective privilege set in one
+read-only call.
 
 ## 14. Local AI (desktop only)
 
