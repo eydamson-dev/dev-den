@@ -9,6 +9,7 @@ Each claim is marked with its source:
 
 - `upstream`: stated in the ProxmoxMCP-Plus README (read on 2026-11-03).
 - `proxmox`: standard Proxmox API behaviour, not from upstream.
+- `verified`: exercised against the homelab on 2026-11-03.
 - `untested`: not yet run on a real host. Do not run it without reading the output first.
 
 ## Configuration (upstream)
@@ -44,34 +45,43 @@ modes, which this setup does not use. `upstream`
 ## Verifying the token without starting the MCP
 
 Starting the MCP launches a stdio server, which waits for a client. So do not use
-it as a test. Test the token directly against the API instead. This reads the
-secret from the private file in a subshell and prints only the HTTP status code.
+it as a test. Test the token directly against the API instead. The secret is read
+from the private env file into a mode-600 header file, never into argv — a
+malformed curl command echoes its arguments back. Only the status code prints.
 
 ```sh
 ( set -a; . <PRIVATE_ENV_FILE>; set +a
-  curl -fsSk -o /dev/null -w '%{http_code}\n' \
-    -H "Authorization: PVEAPIToken=${PROXMOX_USER}!${PROXMOX_TOKEN_NAME}=${PROXMOX_TOKEN_VALUE}" \
-    "https://${PROXMOX_HOST}:${PROXMOX_PORT:-8006}/api2/json/version" )
+  header=$(mktemp)
+  chmod 600 "$header"
+  printf 'Authorization: PVEAPIToken=%s!%s=%s\n' \
+    "$PROXMOX_USER" "$PROXMOX_TOKEN_NAME" "$PROXMOX_TOKEN_VALUE" > "$header"
+  curl -fsS --cacert "${REQUESTS_CA_BUNDLE:?set REQUESTS_CA_BUNDLE to the PVE CA bundle}" \
+    -o /dev/null -w '%{http_code}\n' -H @"$header" \
+    "https://${PROXMOX_HOST}:${PROXMOX_PORT:-8006}/api2/json/version"
+  rm -f "$header" )
 ```
 
 Expected output: `200`. `proxmox` (the `PVEAPIToken` header format is the standard
-Proxmox API token format).
+Proxmox API token format). TLS stays verified: the private env file points
+`REQUESTS_CA_BUNDLE` at a bundle containing the PVE CA. Do not use `-k` as a fix
+for a TLS error.
 
-## Creating the role and token (untested)
+## Creating the role and token (verified on the homelab)
 
-The upstream documentation does not describe creating roles or tokens, so these
-steps are not verified against it. Run them only after reading the output of each
-one.
+The upstream documentation does not describe creating roles or tokens. These steps
+were run on the homelab on 2026-11-03; the concrete role name and privilege set
+stay in the private note, not this repository. Run them only after reading the
+output of each one.
 
 | # | Step | Status | Command shape |
 | --- | --- | --- | --- |
-| 1 | Check the API answers | untested | the `curl` check above, without the token |
-| 2 | Create a role with the privileges the workflows need | untested | `pveum role add <ROLE> -privs "<PRIVS>"` |
-| 3 | Create the user | untested | `pveum user add <USER>@pve` |
-| 4 | Grant the role on the paths it needs | untested | `pveum aclmod <PATH> -user <USER>@pve -role <ROLE>` |
-| 5 | Create the token with privilege separation | untested | `pveum user token add <USER>@pve <TOKEN_ID> --privsep 1` |
-| 6 | Save the secret without printing it | untested | redirect step 5's output into the private file, do not display it |
-| 7 | Verify with the `curl` check above | untested | expect `200` |
+| 1 | Check the API answers | verified | the `curl` check above, without the token |
+| 2 | Create a role with the privileges the workflows need | verified | `pveum role add <ROLE> -privs "<PRIVS>"` |
+| 3 | Create the user | verified | `pveum user add <USER>@pve` |
+| 4 | Grant the role on the paths it needs | verified | `pveum aclmod <PATH> -user <USER>@pve -role <ROLE>` |
+| 5 | Create the token with privilege separation | verified | `pveum user token add <USER>@pve <TOKEN_ID> --privsep 1` |
+| 6 | Save the secret without printing it | verified | redirect step 5's output into the private file, do not display it |
+| 7 | Verify with the `curl` check above | verified | expect `200` |
 
 Notes:
 
@@ -79,6 +89,24 @@ Notes:
 - Choose privileges from the upstream tool list, not from memory. Start read-only.
 - Privilege separation means the token gets only what the ACL grants it. If the
   token is refused an action, check the user's ACL before widening the role.
+
+## Rotating the secret
+
+A token secret cannot be read back. Rotate it in place and capture the new value
+without printing it:
+
+```sh
+pveum user token modify <USER>@<REALM> <TOKEN_ID> --regenerate 1 --output-format json
+```
+
+The command returns `value` once. Write it to the private secret file, then
+**restart the OpenCode backend** — an MCP child inherits its environment when it is
+spawned, so a config reload re-spawns it with the old secret. Verify with a real
+API call (above), then `opencode mcp list`.
+
+If the homelab repo is present, `scripts/check-permissions.sh` verifies the token's
+effective privilege set in one read-only call. A difference is a decision to make,
+not a surprise to absorb.
 
 ## Lessons carried over from the homelab
 

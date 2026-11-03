@@ -77,7 +77,7 @@ private machine note, never from this file.
 | fd | both | AI | `fd --version` | `sudo dnf install -y fd-find` (the binary is `fd`) | — |
 | fzf | both | AI | `fzf --version` | `sudo dnf install -y fzf` | — |
 | bat | both | AI | `bat --version` | `sudo dnf install -y bat` | — |
-| lazygit | both | AI | `lazygit --version` | `sudo dnf install -y lazygit` | — |
+| lazygit | both | AI | `lazygit --version` | `sudo dnf copr enable dejan/lazygit`, then `sudo dnf install -y lazygit` (not in the Fedora repos) | — |
 | tmux | both | AI | `tmux -V` | `sudo dnf install -y tmux` | — |
 | stylua | both | AI | `stylua --version` | `cargo install stylua` or the upstream release | Neovim formatter |
 | pre-commit | both | AI | `pre-commit --version` | `uv tool install pre-commit` | — |
@@ -173,7 +173,7 @@ Record the confirmed binary name here once it is known.
 
 Reference: `RekklesNA/ProxmoxMCP-Plus` (`https://github.com/RekklesNA/ProxmoxMCP-Plus`), pinned to
 `0.6.2`, run over stdio with `uvx proxmox-mcp-plus==0.6.2`. Configuration keys, their
-sources, and the untested role and token steps are in `docs/proxmox-mcp.md`.
+sources, and the role and token steps are in `docs/proxmox-mcp.md`.
 
 Do not check the MCP by starting it: it is a stdio server and waits for a client.
 Check the token against the Proxmox API instead (see the doc for the command).
@@ -183,10 +183,14 @@ Check the token against the Proxmox API instead (see the doc for the command).
 | Private env file | both | AI | `test -s <PRIVATE_ENV_FILE>` and mode `600` | Holds `PROXMOX_*` variables. Never printed |
 | Token works | both | AI | API version call returns `200` (command in the doc) | Proves the token and host, without starting the MCP |
 | MCP launches | both | AI | `command -v uvx` succeeds | Full launch is tested by OpenCode, not by the skill |
-| Role and token creation | both | CMD | untested, see the doc | Run only after reading each output |
+| Role and token creation | both | CMD | verified on the homelab, see the doc | Run only after reading each output |
 
 Read-only is the default. Write privileges are added only for a documented operation
 the user approves.
+
+The MCP child reads its environment when it is spawned. After rotating the token,
+restart the OpenCode backend and re-run `opencode mcp list`; a config reload alone
+keeps the old secret in the child.
 
 ## 14. Local AI (desktop only)
 
