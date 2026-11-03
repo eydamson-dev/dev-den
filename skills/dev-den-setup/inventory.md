@@ -34,11 +34,13 @@ private machine note, never from this file.
 | Item | Applies to | Mode | Check | Install | Notes |
 | --- | --- | --- | --- | --- | --- |
 | secrets directory | both | AI | `stat -c '%a' ~/.config/secrets` prints `700` | `mkdir -p ~/.config/secrets && chmod 700 ~/.config/secrets` | Never print values |
-| `env` file | both | CMD | `test -s ~/.config/secrets/env` | You write it (see below) | Sourced by `~/.zshenv` |
 | Figma token | both | CMD | `test -s ~/.config/secrets/figma-token` | `printf '%s' 'TOKEN' > ~/.config/secrets/figma-token && chmod 600 ~/.config/secrets/figma-token` | Raw file, no trailing newline |
 | Obsidian REST token | both | GUI | `test -s ~/.config/secrets/obsidian-token` | Copy from the plugin settings, then `printf '%s' 'KEY' > …` | Generated per install. Never copy from another machine |
 | Proxmox token | both | CMD | `test -s ~/.config/secrets/proxmox-token` | See section 9 | Raw file, no trailing newline |
 | homelab SSH key | both | CMD | `test -f ~/.ssh/<homelab-key>` | `ssh-keygen -t ed25519 -f ~/.ssh/<homelab-key> -C "<machine-name>"` | One key per machine. Add the public key to the homelab yourself |
+
+Each secret is a separate raw file. There is no shared `~/.config/secrets/env`
+file; do not create one.
 
 ## 3. Git and GitHub
 
@@ -93,7 +95,6 @@ private machine note, never from this file.
 | default shell is zsh | both | CMD | `getent passwd "$USER" \| grep -q zsh` | `chsh -s "$(command -v zsh)"` | Needs a new login |
 | oh-my-zsh | both | AI | `test -d ~/.oh-my-zsh` | official installer, unattended | — |
 | zsh-autosuggestions | both | AI | `test -d ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions` | `git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions` | — |
-| `~/.zshenv` sources secrets | both | AI | `grep -q 'config/secrets/env' ~/.zshenv` | Add the three-line guard: source the file only if it exists | Check the presence of the line. Never print the file |
 | fzf key bindings | both | AI | `test -f /usr/share/fzf/shell/key-bindings.zsh` | `sudo dnf install -y fzf` (ships the file); source it from `~/.zshrc` | Fedora path. Verify the path after install |
 
 Optional, not on the desktop: starship, zoxide, atuin, eza, direnv. Offer them, do
