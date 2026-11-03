@@ -55,7 +55,7 @@ file; do not create one.
 
 | Item | Applies to | Mode | Check | Install | Reference |
 | --- | --- | --- | --- | --- | --- |
-| Docker CE | both | AI | `docker --version` | Docker's Fedora repository, then `sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin` | Docker 29.x |
+| Docker CE | both | AI | `docker --version` | `sudo dnf install -y dnf-plugins-core`, then `sudo dnf config-manager addrepo --from-repofile=https://download.docker.com/linux/fedora/docker-ce.repo`, then `sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin` | Docker 29.x |
 | Docker daemon | both | AI | `systemctl is-active docker` prints `active` | `sudo systemctl enable --now docker` | — |
 | Docker access | both | CMD | `docker info >/dev/null 2>&1` | `sudo usermod -aG docker "$USER"`, then log out and back in | Group change needs a new login. A new shell is not enough |
 | Docker Compose | both | AI | `docker compose version` | included with docker-compose-plugin | — |
