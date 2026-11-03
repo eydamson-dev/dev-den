@@ -17,6 +17,7 @@ or instructions, waits for me to say `done`, re-checks, and continues.
 | `skills/dev-den-setup/inventory.md` | Every item: applicability, check, install, mode, version reference |
 | `docs/decisions.md` | Architecture decisions and why they were made |
 | `docs/proxmox-mcp.md` | Proxmox MCP config, token rotation, and safe checks |
+| `docs/opencode-desktop.md` | Desktop launcher PATH, Obsidian CA trust, and verification |
 
 ## Install the skill
 

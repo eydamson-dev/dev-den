@@ -88,11 +88,25 @@ Expected:
 4. The status changes to `installed` or `working`. If it does not, the AI says so
    and does not claim success.
 
-## Phase 5: The laptop (later)
+## Phase 5: The laptop (verified 2026-11-03)
 
-Run the same phases on the laptop. Start with the skill install and Phase 1. Do
-not start installing anything until the inventory reads correctly on the laptop.
-The laptop has no GPU, so GPU items should be skipped, not reported as missing.
+Run the same phases on the laptop. The laptop has no GPU, so GPU items are skipped,
+not reported as missing.
+
+The 2026-11-03 run reached:
+
+- role detected as **laptop** (Intel Iris Xe; no NVIDIA)
+- every applicable item installed, configured, or working
+- 7/7 MCP servers connected
+- Proxmox API `200`; the token permission check reports no drift
+- Obsidian REST `200`; chatgpt-bridge `doctor` passed
+- `~/.config/secrets/env` no longer exists; each secret is its own file
+- `img2threejs` absent is a warning, not a failure
+
+Four inventory bugs surfaced and are fixed: the Obsidian `/` check returned `200`
+without auth, the Obsidian install check assumed Flatpak, the chatgpt-bridge check
+expected a Docker container, and the OpenCode config instruction said to hand-merge
+instead of using the dotfiles renderer.
 
 ## What a failure looks like
 

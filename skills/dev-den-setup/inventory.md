@@ -128,9 +128,9 @@ The installer adds `~/.opencode/bin` to `.bashrc` only. On a zsh login shell, ad
 it to `~/.zshenv`; otherwise `opencode` disappears after switching shells.
 
 The desktop app does not inherit the shell PATH. If `opencode mcp list` reports
-`NotFound: npx` for `figma` or `chrome-devtools`, launch it through a wrapper that
-adds the fnm and opencode bin directories, and set `NODE_EXTRA_CA_CERTS` for the
-Obsidian plugin certificate. A config reload does not change the service
+`NotFound: npx` for `figma` or `chrome-devtools`, or a self-signed error for
+`obsidian`, see `docs/opencode-desktop.md` for the launcher wrapper, desktop
+override, and verification. A config reload does not change the service
 environment; fully restart the app.
 
 `img2threejs` is installed per machine and is not shipped by the dotfiles repo; its
@@ -183,8 +183,9 @@ Close any running Brave first, or the flag is ignored. Verify with the check abo
 | REST API reachable | both | AI | authenticated `GET /vault/` returns `200`; the same call without the token returns `401` | — | `/` returns `200` unauthenticated, so it is not a check. Use a mode-600 header file, not argv. Trust the plugin cert with `--cacert` or `NODE_EXTRA_CA_CERTS` |
 
 The remote MCP is HTTPS with the plugin's self-signed certificate. Extract
-`.crypto.cert` from the plugin `data.json` to a file and set `NODE_EXTRA_CA_CERTS`
-in the OpenCode service environment. Do not disable verification.
+`.crypto.cert` from the plugin `data.json` and trust it through
+`NODE_EXTRA_CA_CERTS`; the exact command and launcher are in
+`docs/opencode-desktop.md`. Do not disable verification.
 
 ## 12. chatgpt-bridge
 
