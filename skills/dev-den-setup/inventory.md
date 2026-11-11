@@ -264,6 +264,7 @@ them. Connection details are in the private note.
 | Proxmox host | both | AI | version endpoint answers |
 | Fast Note Sync server | both | AI | server answers |
 | Coolify | both | AI | `coolify` context answers, token file present |
+| CI runner VM(s) | both | AI | `gh api repos/<owner>/<repo>/actions/runners` shows the runner(s) online (see infra.md for the topology) |
 | Tailscale client | both | CMD | `tailscale status` |
 
 ---
