@@ -159,8 +159,9 @@ prove the configuration.
 | unity | desktop only | — | — | — | GPU, Unity Editor |
 
 `computer-use-linux` drives the **real** desktop (AT-SPI trees, KWin windows,
-uinput/portal input, portal screenshots). It is registered **globally** in
-`opencode.json`; `setup` enables AT-SPI (a per-user gsettings toggle), the first
+uinput/portal input, portal screenshots). It is registered **globally** (rendered
+from `packages/opencode/opencode.base.json` + the machine profile); `setup`
+enables AT-SPI (a per-user gsettings toggle), the first
 screenshot prompts for portal consent, and WebKitGTK apps expose only their
 top-level window (not the internal DOM). Runbook:
 `Tools/Computer-Use-Linux` in the Engineering vault.
