@@ -151,11 +151,28 @@ prove the configuration.
 | obscura | both | AI | `obscura --version` | pinned binary from the release page, verify its SHA-256 | — |
 | obscura-dev | both | AI | `obscura --version` | same binary, same entry, hidden by the `tools` glob | obscura |
 | chatgpt-bridge | both | AI | `~/projects/chatgpt-bridge/.venv/bin/chatgpt-bridge-mcp` exists and runs | clone the project and create its venv (see section 12) | docker, python3 |
+| computer-use-linux | both | AI | `computer-use-linux doctor \| jq -e '.readiness.blockers == []'` | prebuilt release binaries (verify SHA-256) into `~/.local/bin`, then `computer-use-linux setup` | — |
 | figma | both | AI | `FIGMA_API_KEY` file present and non-empty | `npx -y figma-developer-mcp --stdio` | Figma token |
 | proxmox | both | AI + CMD | the token check in section 13 returns `200` | see section 13 | uv, Proxmox token |
 | comfy | desktop only | — | — | — | GPU |
 | blender | desktop only | CMD | `blender --version` | install Blender, enable its MCP add-on | GPU recommended |
 | unity | desktop only | — | — | — | GPU, Unity Editor |
+
+`computer-use-linux` drives the **real** desktop (AT-SPI trees, KWin windows,
+uinput/portal input, portal screenshots). It is registered **globally** in
+`opencode.json`; `setup` enables AT-SPI (a per-user gsettings toggle), the first
+screenshot prompts for portal consent, and WebKitGTK apps expose only their
+top-level window (not the internal DOM). Runbook:
+`Tools/Computer-Use-Linux` in the Engineering vault.
+
+`agent-workspace-linux` is the **project-local** sibling (a hidden desktop for
+native GUI QA), not in the global `opencode.json` table above: it is registered
+per project in that project's `.opencode/opencode.jsonc`. The prebuilt binary
+`~/.local/bin/agent-workspace-linux` (v0.6.4, SHA-256 verified) needs
+`xorg-x11-server-Xvfb openbox xdotool` for the X11 backend (KWin needs none).
+Check: `agent-workspace-linux doctor` reports `ready_for_x11_workspace` and
+`ready_for_kwin_workspace` true. Runbook: `Tools/Agent-Workspace-Linux` in the
+Engineering vault.
 
 Brave debugging launch (for chrome-devtools). `/usr/bin/brave-browser` is the
 confirmed Fedora binary. To make CDP the default, install a wrapper and point the
@@ -260,4 +277,6 @@ chatgpt-bridge ← docker ← docker access ← (new login)
               ← python3, git, gh auth
 Proxmox MCP   ← uv/uvx ← proxmox token ← role ← Proxmox host reachable
 Figma MCP     ← npx (Node via fnm) ← figma token file
+computer-use-linux ← prebuilt binary + AT-SPI enabled
+agent-workspace-linux ← Xvfb + openbox + xdotool (X11 backend)
 ```
